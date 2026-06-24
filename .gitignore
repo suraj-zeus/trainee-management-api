@@ -1,0 +1,13 @@
+
+*/obj/
+
+*/bin/
+
+*/.env
+
+*/uploads/
+
+.env
+bin/
+obj/
+uploads/
