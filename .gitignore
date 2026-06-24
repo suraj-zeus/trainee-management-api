@@ -7,7 +7,16 @@
 
 */uploads/
 
+
 .env
 bin/
 obj/
 uploads/
+
+
+docker/
+
+dump.sql
+
+docker-compose.yml
+
