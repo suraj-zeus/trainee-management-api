@@ -4,6 +4,8 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>TraineeManagement.Api</AssemblyName> 
+    <RootNamespace>TraineeManagement.Api</RootNamespace> 
   </PropertyGroup>
 
   <ItemGroup>
