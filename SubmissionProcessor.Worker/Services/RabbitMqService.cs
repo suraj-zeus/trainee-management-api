@@ -138,8 +138,7 @@ public class RabbitMqService : IRabbitMqService
     public async Task ConsumeAsync(CancellationToken cancellationToken)
     {
 
-        // call TrainingDirectoryServiceClient to fetch trainee data
-        await FetchTraineeData(cancellationToken);
+       
 
 
 
@@ -156,6 +155,10 @@ public class RabbitMqService : IRabbitMqService
         {
             string messageId = eventArgs.BasicProperties.MessageId;
             string correlationId = eventArgs.BasicProperties.CorrelationId;
+
+
+            // call TrainingDirectoryServiceClient to fetch trainee data
+            await FetchTraineeData(correlationId, cancellationToken);
 
             try
             {
@@ -332,12 +335,12 @@ public class RabbitMqService : IRabbitMqService
     }
 
 
-    private async Task FetchTraineeData(CancellationToken cancellationToken)
+    private async Task FetchTraineeData(string correlationId, CancellationToken cancellationToken)
     {
 
         try
         {
-            TraineeProfileDto trainee = await _client.GetTraineeByIdAsync(1, cancellationToken);
+            TraineeProfileDto trainee = await _client.GetTraineeByIdAsync(1, correlationId, cancellationToken);
             _logger.LogInformation(
                 "Processed trainee: ID {TraineeId}, Name: {FirstName} {LastName}, Email: {Email}, Tech Stack: {TechStack}, Status: {Status}",
                 trainee.Id,

@@ -24,12 +24,30 @@ public class TrainingDirectoryServiceClient
 
 
 
-    public async Task<TraineeProfileDto?> GetTraineeByIdAsync(int id, CancellationToken cancellationToken)
+    public async Task<TraineeProfileDto?> GetTraineeByIdAsync(int id, string? correlationId, CancellationToken cancellationToken)
     {
         try
         {
-            var trainee = await _httpClient.GetFromJsonAsync<TraineeProfileDto>($"api/directory/trainees/{id}", cancellationToken);
+
+            var request = new HttpRequestMessage(HttpMethod.Get, $"api/directory/trainees/{id}");
+
+            if (string.IsNullOrEmpty(correlationId))
+            {
+                correlationId = Guid.NewGuid().ToString();
+            }
+
+            request.Headers.Add("X-Correlation-ID", correlationId);
+
+
+            using var response = await _httpClient.SendAsync(request, cancellationToken);
+
+            response.EnsureSuccessStatusCode();
+
+            var trainee = await response.Content.ReadFromJsonAsync<TraineeProfileDto>(cancellationToken: cancellationToken);
             return trainee;
+
+            // var trainee = await _httpClient.GetFromJsonAsync<TraineeProfileDto>($"api/directory/trainees/{id}", cancellationToken);
+            // return trainee;
         }
         catch (HttpRequestException ex) when (ex.StatusCode ==  HttpStatusCode.NotFound)
         {

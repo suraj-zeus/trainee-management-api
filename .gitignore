@@ -7,7 +7,10 @@
 docker/
 dump.sql
 
+Dockerfile.*
 
+
+*/Dockerfile.*
 */obj/
 
 */bin/
@@ -18,9 +21,8 @@ dump.sql
 
 */dump.sql
 
+*/docker
 
-# docker compose
-docker-compose.yml
 
-*/docker-compose.yml
+
 

@@ -33,24 +33,11 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddHttpClient<TrainingDirectoryServiceClient>((serviceProvider, client) =>
 {
     // Centralized BaseAddress and Timeout
-    client.BaseAddress = new Uri("http://localhost:5024");
+    client.BaseAddress = new Uri(builder.Configuration["TraineeDirectoryApi:Url"]);
     // client.Timeout = TimeSpan.FromSeconds(15);
 
     // Centralized Required Headers
     client.DefaultRequestHeaders.Add("Accept", "application/json");
-
-    // Propagate Correlation ID 
-    var httpContextAccessor = serviceProvider.GetRequiredService<IHttpContextAccessor>();
-    var correlationId = httpContextAccessor.HttpContext?.Request.Headers["X-Correlation-ID"].ToString();
-    
-    if (!string.IsNullOrEmpty(correlationId))
-    {
-        client.DefaultRequestHeaders.Add("X-Correlation-ID", correlationId);
-    }
-    else
-    {
-        client.DefaultRequestHeaders.Add("X-Correlation-ID", Guid.NewGuid().ToString());
-    }
 }).AddStandardResilienceHandler(options =>
 {   
     // timeout across all retry requests

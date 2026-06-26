@@ -2,6 +2,7 @@ using NSwag.AspNetCore;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Metadata;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -188,8 +189,28 @@ builder.Services.AddOpenApiDocument(config =>
 );
 
 
+
+
+// Register the core health check services
+builder.Services.AddHealthChecks();
+
+
+
 var app = builder.Build();
 
+
+
+// Liveness Endpoint
+app.MapHealthChecks("/health/live", new HealthCheckOptions
+{
+    Predicate = _ => false 
+});
+
+// 2. Readiness Endpoint
+app.MapHealthChecks("/health/ready", new HealthCheckOptions
+{
+    Predicate = _ => true 
+});
 
 
 // Use the exception handler
