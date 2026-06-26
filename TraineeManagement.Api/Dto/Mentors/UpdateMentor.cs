@@ -4,6 +4,7 @@
 
 
 using System.ComponentModel.DataAnnotations;
+using SharedFolder.Enums;
 
 namespace TraineeManagement.Api.Dto;
 

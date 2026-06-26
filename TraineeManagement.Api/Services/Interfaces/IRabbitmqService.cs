@@ -1,6 +1,6 @@
 
 
-using TraineeManagement.Api.Messaging;
+using SharedFolder.Messaging;
 
 namespace TraineeManagement.Api.Services;
 

@@ -7,7 +7,7 @@ using Microsoft.Extensions.Options;
 using System.Text;
 
 using TraineeManagement.Api.Dto;
-using TraineeManagement.Api.Models;
+using SharedFolder.Models;
 using TraineeManagement.Api.Repositories;
 using TraineeManagement.Api.Configurations;
 

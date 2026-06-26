@@ -7,7 +7,7 @@ using Microsoft.Extensions.Options;
 
 using TraineeManagement.Api.Configurations;
 using TraineeManagement.Api.Dto;
-using TraineeManagement.Api.Messaging;
+using SharedFolder.Messaging;
 
 namespace TraineeManagement.Api.Services;
 
@@ -57,12 +57,19 @@ public class RabbitMqService : IRabbitMqService
 
         await using var channel = await _connection.CreateChannelAsync();
 
+         // arguments for main queue
+        var mainQueueArguments = new Dictionary<string, object?>
+        {
+            { "x-dead-letter-exchange", _rabbitMqConfig.DlxName },
+            { "x-dead-letter-routing-key", _rabbitMqConfig.RoutingKey }
+        };
+
         await channel.QueueDeclareAsync(
             queue: _rabbitMqConfig.SubmissionQueue,
             durable: true,
             exclusive: false,
             autoDelete: false,
-            arguments: null
+            arguments: mainQueueArguments
         );
 
 

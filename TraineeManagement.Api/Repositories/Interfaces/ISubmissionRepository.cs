@@ -1,5 +1,5 @@
 
-using TraineeManagement.Api.Models;
+using SharedFolder.Models;
 
 namespace TraineeManagement.Api.Repositories;
 

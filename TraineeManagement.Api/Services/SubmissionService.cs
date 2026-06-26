@@ -4,7 +4,7 @@ using TraineeManagement.Api.Configurations;
 using TraineeManagement.Api.Constants;
 using TraineeManagement.Api.Dto;
 using TraineeManagement.Api.Exceptions;
-using TraineeManagement.Api.Models;
+using SharedFolder.Models;
 using TraineeManagement.Api.Repositories;
 
 namespace TraineeManagement.Api.Services;

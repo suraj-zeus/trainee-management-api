@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using TraineeManagement.Api.Models;
+using SharedFolder.Models;
 
 namespace TraineeManagement.Api.DatabaseContext;
 
@@ -25,11 +25,66 @@ public class AppDbContext : DbContext
 
     public DbSet<SubmissionFileModel> SubmissionFiles { get; set; }
 
+    public DbSet<ProcessingJobModel> ProcessingJobs { get; set; }
+
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
 
         modelBuilder.Entity<TaskAssignmentModel>()
+            .HasOne(ta => ta.Trainee)          // Each TaskAssignment has one Trainee
+            .WithMany(t => t.TaskAssignments)        // Each Trainee has many TaskAssignments
+            .HasForeignKey(ta => ta.TraineeId) // Foreign key in TaskAssignment table
+            .OnDelete(DeleteBehavior.NoAction);
+
+        modelBuilder.Entity<TaskAssignmentModel>()
+            .HasOne(ta => ta.Mentor)          // Each TaskAssignment has one Mentor
+            .WithMany(m => m.TaskAssignments)        // Each Mentor has many TaskAssignments
+            .HasForeignKey(ta => ta.MentorId) // Foreign key in TaskAssignment table
+            .OnDelete(DeleteBehavior.NoAction);
+
+        modelBuilder.Entity<TaskAssignmentModel>()
+            .HasOne(ta => ta.LearningTask)          // Each TaskAssignemnt has one LearningTask
+            .WithMany(t => t.TaskAssignments)        // Each LearningTask has many TaskAssignments
+            .HasForeignKey(ta => ta.LearningTaskId) // Foreign key in Task Assignment table
+            .OnDelete(DeleteBehavior.NoAction);
+
+        modelBuilder.Entity<SubmissionModel>()
+            .HasOne(s => s.TaskAssignment)
+            .WithMany(ta => ta.Submissions)
+            .HasForeignKey(s => s.TaskAssignmentId)
+            .OnDelete(DeleteBehavior.NoAction);
+
+        modelBuilder.Entity<ReviewModel>()
+            .HasOne(r => r.Submission)
+            .WithMany(s => s.Reviews)
+            .HasForeignKey(r => r.SubmissionId)
+            .OnDelete(DeleteBehavior.NoAction);
+
+        modelBuilder.Entity<ReviewModel>()
+            .HasOne(r => r.Mentor)
+            .WithMany(s => s.Reviews)
+            .HasForeignKey(r => r.MentorId)
+            .OnDelete(DeleteBehavior.NoAction);
+
+        modelBuilder.Entity<SubmissionFileModel>()
+            .HasOne(sf => sf.Submission)
+            .WithMany(s => s.SubmissionFiles)
+            .HasForeignKey(sf => sf.SubmissionId)
+            .OnDelete(DeleteBehavior.NoAction);
+
+
+        modelBuilder.Entity<ProcessingJobModel>()
+            .HasOne(p => p.Submission)
+            .WithMany() // Leaves collection empty if Submission doesn't track Job history
+            .HasForeignKey(p => p.SubmissionId)
+            .OnDelete(DeleteBehavior.NoAction);
+        
+        modelBuilder.Entity<ProcessingJobModel>()
+            .HasOne(p => p.SubmissionFile)
+            .WithMany()
+            .HasForeignKey(p => p.FileId)
+            .OnDelete(DeleteBehavior.NoAction);  modelBuilder.Entity<TaskAssignmentModel>()
             .HasOne(ta => ta.Trainee)          // Each TaskAssignment has one Trainee
             .WithMany(t => t.TaskAssignments)        // Each Trainee has many TaskAssignments
             .HasForeignKey(ta => ta.TraineeId) // Foreign key in TaskAssignment table
@@ -66,5 +121,19 @@ public class AppDbContext : DbContext
             .HasOne(sf => sf.Submission)
             .WithMany(s => s.SubmissionFiles)
             .HasForeignKey(sf => sf.SubmissionId);
+
+
+        modelBuilder.Entity<ProcessingJobModel>()
+            .HasOne(p => p.Submission)
+            .WithMany() // Leaves collection empty if Submission doesn't track Job history
+            .HasForeignKey(p => p.SubmissionId)
+            .OnDelete(DeleteBehavior.Cascade); // Deletes job tracker if submission is purged
+
+        modelBuilder.Entity<ProcessingJobModel>()
+            .HasOne(p => p.SubmissionFile)
+            .WithMany() 
+            .HasForeignKey(p => p.FileId)
+            .OnDelete(DeleteBehavior.Cascade); // Deletes job tracker if file is purged
+
     }
 }

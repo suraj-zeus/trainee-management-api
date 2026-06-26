@@ -1,7 +1,0 @@
-
-
-enum MentorStatus
-{
-    Active,
-    Inactive
-}

@@ -99,6 +99,53 @@ namespace TraineeManagement.Api.Migrations
                     b.ToTable("Mentors");
                 });
 
+            modelBuilder.Entity("Trainee.api.Models.ProcessingJobModel", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("Attempts")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CompletedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("CorrelationId")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("ErrorSummary")
+                        .HasColumnType("longtext");
+
+                    b.Property<int>("FileId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("MessageId")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<DateTime>("StartedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<int>("SubmissionId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FileId");
+
+                    b.HasIndex("SubmissionId");
+
+                    b.ToTable("ProcessingJobs");
+                });
+
             modelBuilder.Entity("Trainee.api.Models.ReviewModel", b =>
                 {
                     b.Property<int>("Id")
@@ -330,18 +377,37 @@ namespace TraineeManagement.Api.Migrations
                     b.ToTable("Users");
                 });
 
+            modelBuilder.Entity("Trainee.api.Models.ProcessingJobModel", b =>
+                {
+                    b.HasOne("Trainee.api.Models.SubmissionFileModel", "SubmissionFile")
+                        .WithMany()
+                        .HasForeignKey("FileId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Trainee.api.Models.SubmissionModel", "Submission")
+                        .WithMany()
+                        .HasForeignKey("SubmissionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Submission");
+
+                    b.Navigation("SubmissionFile");
+                });
+
             modelBuilder.Entity("Trainee.api.Models.ReviewModel", b =>
                 {
                     b.HasOne("Trainee.api.Models.MentorModel", "Mentor")
                         .WithMany("Reviews")
                         .HasForeignKey("MentorId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.HasOne("Trainee.api.Models.SubmissionModel", "Submission")
                         .WithMany("Reviews")
                         .HasForeignKey("SubmissionId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.Navigation("Mentor");
@@ -354,7 +420,7 @@ namespace TraineeManagement.Api.Migrations
                     b.HasOne("Trainee.api.Models.SubmissionModel", "Submission")
                         .WithMany("SubmissionFiles")
                         .HasForeignKey("SubmissionId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.Navigation("Submission");
@@ -365,7 +431,7 @@ namespace TraineeManagement.Api.Migrations
                     b.HasOne("Trainee.api.Models.TaskAssignmentModel", "TaskAssignment")
                         .WithMany("Submissions")
                         .HasForeignKey("TaskAssignmentId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.Navigation("TaskAssignment");

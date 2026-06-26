@@ -2,7 +2,7 @@ using System.Security.Claims;
 
 
 using TraineeManagement.Api.Dto;
-using TraineeManagement.Api.Models;
+using SharedFolder.Models;
 
 namespace TraineeManagement.Api.Services;
 

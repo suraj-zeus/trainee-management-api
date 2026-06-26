@@ -15,7 +15,7 @@ using NSwag.Generation.Processors.Security;
 using TraineeManagement.Api.Services;
 using TraineeManagement.Api.DatabaseContext;
 using TraineeManagement.Api.Repositories;
-using TraineeManagement.Api.Models;
+using SharedFolder.Models;
 using TraineeManagement.Api.Exceptions;
 using TraineeManagement.Api.Configurations;
 using DotNetEnv;
@@ -149,6 +149,7 @@ builder.Services.AddScoped<ITaskAssignmentRepository, TaskAssignmentRepository>(
 builder.Services.AddScoped<ISubmissionRepository, SubmissionRepository>();
 builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
 builder.Services.AddScoped<ISubmissionFileRepository, SubmissionFileRepository>();
+builder.Services.AddScoped<IProcessJobRepository, ProcessingJobRepository>();
 
 
 builder.Services.AddScoped<IFileStorageService, LocalFileStorageService>();
@@ -163,6 +164,8 @@ builder.Services.AddScoped<ISubmissionService, SubmissionService>();
 builder.Services.AddScoped<IReviewService, ReviewService>();
 builder.Services.AddScoped<ISubmissionFileService, SubmissionFileService>();
 builder.Services.AddScoped<IRabbitMqService, RabbitMqService>();
+builder.Services.AddScoped<IProcessJobService, ProcessJobService>();
+
 
 
 // openapi (swagger) config

@@ -4,8 +4,9 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
-using TraineeManagement.Api.Models;
+using SharedFolder.Models;
 using TraineeManagement.Api.Configurations;
+using SharedFolder.Enums;
 
 namespace TraineeManagement.Api.Services;
 

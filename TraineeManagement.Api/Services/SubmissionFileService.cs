@@ -2,9 +2,10 @@ using System.Security.Claims;
 using TraineeManagement.Api.Configurations;
 using TraineeManagement.Api.Dto;
 using TraineeManagement.Api.Exceptions;
-using TraineeManagement.Api.Messaging;
-using TraineeManagement.Api.Models;
+using SharedFolder.Messaging;
+using SharedFolder.Models;
 using TraineeManagement.Api.Repositories;
+using SharedFolder.Enums;
 
 namespace TraineeManagement.Api.Services;
 
@@ -18,6 +19,8 @@ public class SubmissionFileService : ISubmissionFileService
     private ISubmissionRepository _submissionRepository;
     private IRabbitMqService _rabbitMqService;
 
+    private IProcessJobService _processJobService;
+
     private ILogger<SubmissionFileService> _logger;
 
     public SubmissionFileService(
@@ -26,7 +29,8 @@ public class SubmissionFileService : ISubmissionFileService
         IFileStorageService fileStorageService,
         IRabbitMqService rabbitMqService,
         IHttpContextAccessor httpContextAccessor,
-        ILogger<SubmissionFileService> logger
+        ILogger<SubmissionFileService> logger,
+        IProcessJobService processJobService
     )
     {
         _submissionRepository = submissionRepository;
@@ -35,6 +39,7 @@ public class SubmissionFileService : ISubmissionFileService
         _rabbitMqService = rabbitMqService;
         _httpContextAccessor = httpContextAccessor;
         _logger = logger;
+        _processJobService = processJobService;
     }
 
 
@@ -57,9 +62,20 @@ public class SubmissionFileService : ISubmissionFileService
 
         var fileExt = Path.GetExtension(formFile.FileName).ToLowerInvariant();
         var storageName = $"{Guid.NewGuid()}{fileExt}";
+        var originalFileName = Path.GetFileName(formFile.FileName);
 
         await using var stream = formFile.OpenReadStream();
         var checkSum = await _fileStorageService.ComputeCheckSum(stream);
+
+
+        // avoid duplicate file upload by validating the checksum
+        SubmissionFileModel existingFile = await _submissionFileRepository.FindByChecksum(checkSum);
+
+        if(existingFile != null)
+        {
+            throw new InvalidOperationException($"Invalid operation! This file : {originalFileName} already exists");
+        }
+
 
         // get path of saved file
         string path = await _fileStorageService.SaveAsync(stream, storageName);
@@ -79,7 +95,7 @@ public class SubmissionFileService : ISubmissionFileService
             SubmissionFileModel submissionFile = new()
             {
                 SubmissionId = submissionId,
-                OriginalFileName = Path.GetFileName(formFile.FileName),
+                OriginalFileName = originalFileName,
                 StorageName = storageName,
                 ContentType = formFile.ContentType,
                 FileSizeBytes = formFile.Length,
@@ -94,10 +110,11 @@ public class SubmissionFileService : ISubmissionFileService
 
             // publish message in rabbitmq 
             string correlationId = _httpContextAccessor.HttpContext.TraceIdentifier;
+            string messageId = Guid.NewGuid().ToString();
 
             SubmissionProcessingRequest submissionProcessingRequest = new()
             {
-                MessageId = Guid.NewGuid().ToString(),
+                MessageId = messageId,
                 CorrelationId = correlationId,
                 SubmissionId = submissionFile.SubmissionId,
                 FileId = submissionFile.Id,
@@ -107,6 +124,21 @@ public class SubmissionFileService : ISubmissionFileService
 
             await _rabbitMqService.PublishAsync(submissionProcessingRequest);
 
+            // add processing job status
+            ProcessingJobModel processingJob = new ()
+            {
+                MessageId = messageId,
+                CorrelationId = correlationId,
+                SubmissionId = submissionFile.SubmissionId,
+                FileId = submissionFile.Id,
+                Status = ProcessingJobStatus.Queued.ToString(),
+                Attempts = 0,
+                StartedDate = DateTime.UtcNow
+            };
+
+            await _processJobService.AddProcessJob(processingJob);
+
+            // return response
             return MapSubmissionFileToUploadSubmissionFileResponseDto(submissionFile, correlationId);
         }
         catch (Exception ex)
@@ -178,7 +210,7 @@ public class SubmissionFileService : ISubmissionFileService
 
         if (!await _fileStorageService.ExistsAsync(submissionFile.StorageName))
         {
-            throw new KeyNotFoundException($"Physical file is mission for the given file id : {id}");
+            throw new KeyNotFoundException($"Physical file is missing for the given file id : {id}");
         }
 
         await _fileStorageService.DeleteAsync(submissionFile.StorageName);

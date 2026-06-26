@@ -2,7 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using TraineeManagement.Api.DatabaseContext;
 using TraineeManagement.Api.Dto;
-using TraineeManagement.Api.Models;
+using SharedFolder.Models;
 
 
 namespace TraineeManagement.Api.Repositories;

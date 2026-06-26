@@ -1,4 +1,13 @@
 
+
+/obj
+/bin
+/uploads
+.env
+docker/
+dump.sql
+
+
 */obj/
 
 */bin/
@@ -7,16 +16,11 @@
 
 */uploads/
 
-
-.env
-bin/
-obj/
-uploads/
+*/dump.sql
 
 
-docker/
-
-dump.sql
-
+# docker compose
 docker-compose.yml
+
+*/docker-compose.yml
 

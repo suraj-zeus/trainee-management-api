@@ -1,7 +1,7 @@
 
-
+using Microsoft.EntityFrameworkCore;
 using TraineeManagement.Api.DatabaseContext;
-using TraineeManagement.Api.Models;
+using SharedFolder.Models;
 
 namespace TraineeManagement.Api.Repositories;
 
@@ -25,6 +25,11 @@ public class SubmissionFileRepository : ISubmissionFileRepository
     public async Task<SubmissionFileModel> FindById(int id)
     {
         return await _appDbContext.SubmissionFiles.FindAsync(id);
+    }
+
+    public async Task<SubmissionFileModel> FindByChecksum(string checkSum)
+    {
+        return await _appDbContext.SubmissionFiles.FirstOrDefaultAsync(sf => sf.CheckSum == checkSum);
     }
 
     public async Task Delete(SubmissionFileModel submissionFile)

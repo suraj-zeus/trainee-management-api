@@ -4,7 +4,7 @@ using Microsoft.Extensions.Options;
 using TraineeManagement.Api.Configurations;
 using TraineeManagement.Api.Controllers;
 using TraineeManagement.Api.Exceptions;
-using TraineeManagement.Api.Models;
+using SharedFolder.Models;
 using System.Security.Cryptography;
 
 

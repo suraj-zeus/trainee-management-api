@@ -2,6 +2,7 @@
 
 using System.ComponentModel.DataAnnotations;
 using TraineeManagement.Api.ValidationAttributes;
+using SharedFolder.Enums;
 
 namespace TraineeManagement.Api.Dto;
 
