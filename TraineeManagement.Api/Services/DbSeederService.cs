@@ -1,5 +1,5 @@
 
-using TraineeManagement.Api.DatabaseContext;
+using SharedFolder.DatabaseContext;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;

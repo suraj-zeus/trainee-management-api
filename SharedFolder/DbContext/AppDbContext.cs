@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using SharedFolder.Models;
 
-namespace TraineeManagement.Api.DatabaseContext;
+namespace SharedFolder.DatabaseContext;
 
 public class AppDbContext : DbContext
 {

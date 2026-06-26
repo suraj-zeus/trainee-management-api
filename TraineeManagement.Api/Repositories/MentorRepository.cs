@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 
-using TraineeManagement.Api.DatabaseContext;
+using SharedFolder.DatabaseContext;
 using TraineeManagement.Api.Dto;
 using SharedFolder.Models;
 

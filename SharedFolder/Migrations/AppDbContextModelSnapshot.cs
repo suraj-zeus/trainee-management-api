@@ -3,20 +3,17 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
-using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SharedFolder.DatabaseContext;
 
 #nullable disable
 
-namespace TraineeManagement.Api.Migrations
+namespace SharedFolder.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260619084428_AddSubmissionFileMigration")]
-    partial class AddSubmissionFileMigration
+    partial class AppDbContextModelSnapshot : ModelSnapshot
     {
-        /// <inheritdoc />
-        protected override void BuildTargetModel(ModelBuilder modelBuilder)
+        protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -25,7 +22,7 @@ namespace TraineeManagement.Api.Migrations
 
             MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
 
-            modelBuilder.Entity("Trainee.api.Models.LearningTaskModel", b =>
+            modelBuilder.Entity("SharedFolder.Models.LearningTaskModel", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -63,7 +60,7 @@ namespace TraineeManagement.Api.Migrations
                     b.ToTable("LearningTasks");
                 });
 
-            modelBuilder.Entity("Trainee.api.Models.MentorModel", b =>
+            modelBuilder.Entity("SharedFolder.Models.MentorModel", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -102,7 +99,54 @@ namespace TraineeManagement.Api.Migrations
                     b.ToTable("Mentors");
                 });
 
-            modelBuilder.Entity("Trainee.api.Models.ReviewModel", b =>
+            modelBuilder.Entity("SharedFolder.Models.ProcessingJobModel", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("Attempts")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CompletedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("CorrelationId")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("ErrorSummary")
+                        .HasColumnType("longtext");
+
+                    b.Property<int>("FileId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("MessageId")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<DateTime>("StartedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<int>("SubmissionId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FileId");
+
+                    b.HasIndex("SubmissionId");
+
+                    b.ToTable("ProcessingJobs");
+                });
+
+            modelBuilder.Entity("SharedFolder.Models.ReviewModel", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -139,7 +183,7 @@ namespace TraineeManagement.Api.Migrations
                     b.ToTable("Reviews");
                 });
 
-            modelBuilder.Entity("Trainee.api.Models.SubmissionFileModel", b =>
+            modelBuilder.Entity("SharedFolder.Models.SubmissionFileModel", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -175,7 +219,7 @@ namespace TraineeManagement.Api.Migrations
                     b.Property<DateTime>("UpdatedDate")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<int>("UploadedUserId")
+                    b.Property<int>("UploadedByUserId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
@@ -185,7 +229,7 @@ namespace TraineeManagement.Api.Migrations
                     b.ToTable("SubmissionFiles");
                 });
 
-            modelBuilder.Entity("Trainee.api.Models.SubmissionModel", b =>
+            modelBuilder.Entity("SharedFolder.Models.SubmissionModel", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -218,7 +262,7 @@ namespace TraineeManagement.Api.Migrations
                     b.ToTable("Submissions");
                 });
 
-            modelBuilder.Entity("Trainee.api.Models.TaskAssignmentModel", b =>
+            modelBuilder.Entity("SharedFolder.Models.TaskAssignmentModel", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -259,7 +303,7 @@ namespace TraineeManagement.Api.Migrations
                     b.ToTable("TaskAssignments");
                 });
 
-            modelBuilder.Entity("Trainee.api.Models.TraineeModel", b =>
+            modelBuilder.Entity("SharedFolder.Models.TraineeModel", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -298,7 +342,7 @@ namespace TraineeManagement.Api.Migrations
                     b.ToTable("Trainees");
                 });
 
-            modelBuilder.Entity("Trainee.api.Models.UserModel", b =>
+            modelBuilder.Entity("SharedFolder.Models.UserModel", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -333,18 +377,37 @@ namespace TraineeManagement.Api.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("Trainee.api.Models.ReviewModel", b =>
+            modelBuilder.Entity("SharedFolder.Models.ProcessingJobModel", b =>
                 {
-                    b.HasOne("Trainee.api.Models.MentorModel", "Mentor")
-                        .WithMany("Reviews")
-                        .HasForeignKey("MentorId")
+                    b.HasOne("SharedFolder.Models.SubmissionFileModel", "SubmissionFile")
+                        .WithMany()
+                        .HasForeignKey("FileId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Trainee.api.Models.SubmissionModel", "Submission")
-                        .WithMany("Reviews")
+                    b.HasOne("SharedFolder.Models.SubmissionModel", "Submission")
+                        .WithMany()
                         .HasForeignKey("SubmissionId")
                         .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Submission");
+
+                    b.Navigation("SubmissionFile");
+                });
+
+            modelBuilder.Entity("SharedFolder.Models.ReviewModel", b =>
+                {
+                    b.HasOne("SharedFolder.Models.MentorModel", "Mentor")
+                        .WithMany("Reviews")
+                        .HasForeignKey("MentorId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("SharedFolder.Models.SubmissionModel", "Submission")
+                        .WithMany("Reviews")
+                        .HasForeignKey("SubmissionId")
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.Navigation("Mentor");
@@ -352,43 +415,43 @@ namespace TraineeManagement.Api.Migrations
                     b.Navigation("Submission");
                 });
 
-            modelBuilder.Entity("Trainee.api.Models.SubmissionFileModel", b =>
+            modelBuilder.Entity("SharedFolder.Models.SubmissionFileModel", b =>
                 {
-                    b.HasOne("Trainee.api.Models.SubmissionModel", "Submission")
+                    b.HasOne("SharedFolder.Models.SubmissionModel", "Submission")
                         .WithMany("SubmissionFiles")
                         .HasForeignKey("SubmissionId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.Navigation("Submission");
                 });
 
-            modelBuilder.Entity("Trainee.api.Models.SubmissionModel", b =>
+            modelBuilder.Entity("SharedFolder.Models.SubmissionModel", b =>
                 {
-                    b.HasOne("Trainee.api.Models.TaskAssignmentModel", "TaskAssignment")
+                    b.HasOne("SharedFolder.Models.TaskAssignmentModel", "TaskAssignment")
                         .WithMany("Submissions")
                         .HasForeignKey("TaskAssignmentId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.Navigation("TaskAssignment");
                 });
 
-            modelBuilder.Entity("Trainee.api.Models.TaskAssignmentModel", b =>
+            modelBuilder.Entity("SharedFolder.Models.TaskAssignmentModel", b =>
                 {
-                    b.HasOne("Trainee.api.Models.LearningTaskModel", "LearningTask")
+                    b.HasOne("SharedFolder.Models.LearningTaskModel", "LearningTask")
                         .WithMany("TaskAssignments")
                         .HasForeignKey("LearningTaskId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Trainee.api.Models.MentorModel", "Mentor")
+                    b.HasOne("SharedFolder.Models.MentorModel", "Mentor")
                         .WithMany("TaskAssignments")
                         .HasForeignKey("MentorId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Trainee.api.Models.TraineeModel", "Trainee")
+                    b.HasOne("SharedFolder.Models.TraineeModel", "Trainee")
                         .WithMany("TaskAssignments")
                         .HasForeignKey("TraineeId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -401,31 +464,31 @@ namespace TraineeManagement.Api.Migrations
                     b.Navigation("Trainee");
                 });
 
-            modelBuilder.Entity("Trainee.api.Models.LearningTaskModel", b =>
+            modelBuilder.Entity("SharedFolder.Models.LearningTaskModel", b =>
                 {
                     b.Navigation("TaskAssignments");
                 });
 
-            modelBuilder.Entity("Trainee.api.Models.MentorModel", b =>
+            modelBuilder.Entity("SharedFolder.Models.MentorModel", b =>
                 {
                     b.Navigation("Reviews");
 
                     b.Navigation("TaskAssignments");
                 });
 
-            modelBuilder.Entity("Trainee.api.Models.SubmissionModel", b =>
+            modelBuilder.Entity("SharedFolder.Models.SubmissionModel", b =>
                 {
                     b.Navigation("Reviews");
 
                     b.Navigation("SubmissionFiles");
                 });
 
-            modelBuilder.Entity("Trainee.api.Models.TaskAssignmentModel", b =>
+            modelBuilder.Entity("SharedFolder.Models.TaskAssignmentModel", b =>
                 {
                     b.Navigation("Submissions");
                 });
 
-            modelBuilder.Entity("Trainee.api.Models.TraineeModel", b =>
+            modelBuilder.Entity("SharedFolder.Models.TraineeModel", b =>
                 {
                     b.Navigation("TaskAssignments");
                 });

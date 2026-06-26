@@ -13,7 +13,7 @@ using NSwag;
 using NSwag.Generation.Processors.Security;
 
 using TraineeManagement.Api.Services;
-using TraineeManagement.Api.DatabaseContext;
+using SharedFolder.DatabaseContext;
 using TraineeManagement.Api.Repositories;
 using SharedFolder.Models;
 using TraineeManagement.Api.Exceptions;

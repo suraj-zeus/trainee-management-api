@@ -8,7 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 using SubmissionProcessor.Worker.Configurations;
 using SharedFolder.Messaging;
-using SubmissionProcessor.Worker.DatabaseContext;
+using SharedFolder.DatabaseContext;
 using SharedFolder.Models;
 using SubmissionProcessor.Worker.Exceptions;
 using SubmissionProcessor.Worker.ServiceClients;
