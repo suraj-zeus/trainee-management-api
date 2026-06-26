@@ -60,6 +60,7 @@ public class SubmissionFileService : ISubmissionFileService
             throw new BadRequestException("Invalid file request");
         }
 
+        int userId = int.Parse(claimsPrincipalUser.FindFirstValue(ClaimTypes.NameIdentifier)!);
         var fileExt = Path.GetExtension(formFile.FileName).ToLowerInvariant();
         var storageName = $"{Guid.NewGuid()}{fileExt}";
         var originalFileName = Path.GetFileName(formFile.FileName);
@@ -71,7 +72,8 @@ public class SubmissionFileService : ISubmissionFileService
         // avoid duplicate file upload by validating the checksum
         SubmissionFileModel existingFile = await _submissionFileRepository.FindByChecksum(checkSum);
 
-        if(existingFile != null)
+        // restrict duplicate file upload for same user
+        if(existingFile != null && existingFile.UploadedByUserId == userId)
         {
             throw new InvalidOperationException($"Invalid operation! This file : {originalFileName} already exists");
         }
@@ -90,7 +92,7 @@ public class SubmissionFileService : ISubmissionFileService
         // save metadata in db
         try
         {
-            int userId = int.Parse(claimsPrincipalUser.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            
 
             SubmissionFileModel submissionFile = new()
             {
