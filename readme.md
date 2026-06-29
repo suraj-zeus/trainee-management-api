@@ -742,17 +742,17 @@ Sample POST /api/reviews response:
 
 # Redis Cache 
 
-![alt text](<Screenshot 2026-06-29 155438.png>)
+![alt text](readme-assets/redis.png)
 
 
 # Rabbitmq 
 
-![alt text](<Screenshot 2026-06-29 161258.png>)
+![alt text](readme-assets/rabbitmq.png)
 
 
 # Workflow Diagram
 
-![alt text](image-2.png)
+![alt text](readme-assets/workflow.png)
 
 ## Challanges faced
 - While installing dotnet packages and setting up initial web project in dotnet
