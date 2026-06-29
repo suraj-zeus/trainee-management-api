@@ -2,7 +2,9 @@ using NSwag.AspNetCore;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Metadata;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
+using RabbitMQ.Client;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -32,7 +34,7 @@ builder.Configuration.AddEnvironmentVariables();
 
 // exception handling 
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
-builder.Services.AddProblemDetails(); 
+builder.Services.AddProblemDetails();
 
 
 
@@ -190,31 +192,78 @@ builder.Services.AddOpenApiDocument(config =>
 
 
 
-
-// Register the core health check services
-builder.Services.AddHealthChecks();
+// expose health endpoints
+builder.Services.AddHealthChecks()
+   .AddMySql(
+      connectionString: builder.Configuration["ConnectionStrings:DefaultConnection"],
+      name: "mysql",
+      timeout: TimeSpan.FromSeconds(5))
+   .AddRedis(
+      redisConnectionString: builder.Configuration["Redis:ConnectionString"],
+      name: "redis",
+      timeout: TimeSpan.FromSeconds(5))
+   .AddRabbitMQ(
+      async sp =>
+      {
+          var factory = new ConnectionFactory
+          {
+              HostName = builder.Configuration["RabbitMq:HostName"],
+              UserName = builder.Configuration["RabbitMq:UserName"],
+              Password = builder.Configuration["RabbitMq:Password"],
+              Port = int.Parse( builder.Configuration["RabbitMq:Port"]),
+              VirtualHost = builder.Configuration["RabbitMq:VirtualHost"]
+          };
+          return await factory.CreateConnectionAsync();
+      },
+      name: "rabbitmq",
+      failureStatus: HealthStatus.Unhealthy,
+      timeout: TimeSpan.FromSeconds(5),
+      tags: new[] { "mq", "rabbit" }
+    )
+    .AddUrlGroup(
+        uri: new Uri(builder.Configuration["HealthChecks:TrainingDirectoryHealthUrl"]), // URL to check
+        name: "TraineeDirectory.Api",
+        failureStatus: HealthStatus.Unhealthy,
+        timeout: TimeSpan.FromSeconds(5)
+    );
 
 
 
 var app = builder.Build();
 
 
-
 // Liveness Endpoint
 app.MapHealthChecks("/health/live", new HealthCheckOptions
 {
-    Predicate = _ => false 
+    Predicate = _ => false
 });
 
 // 2. Readiness Endpoint
 app.MapHealthChecks("/health/ready", new HealthCheckOptions
 {
-    Predicate = _ => true 
+    Predicate = _ => true, // Include all health checks
+    ResponseWriter = async (context, report) =>
+    {
+        context.Response.ContentType = "application/json";
+
+        var result = new
+        {
+            status = report.Status.ToString(),
+            checks = report.Entries.Select(e => new
+            {
+                name = e.Key,
+                status = e.Value.Status.ToString(),
+                description = e.Value.Description
+            })
+        };
+
+        await context.Response.WriteAsJsonAsync(result);
+    }
 });
 
 
 // Use the exception handler
-app.UseExceptionHandler(); 
+app.UseExceptionHandler();
 
 // default admin data seeding
 using (var scope = app.Services.CreateAsyncScope())

@@ -92,7 +92,6 @@ public class SubmissionFileService : ISubmissionFileService
         // save metadata in db
         try
         {
-            
 
             SubmissionFileModel submissionFile = new()
             {
@@ -158,6 +157,7 @@ public class SubmissionFileService : ISubmissionFileService
                 _logger.LogCritical(deleteEx, "Failed to clean up orphaned file {StorageName} after upload pipeline failure.", storageName);
             }
 
+            
             throw;
         }
     }

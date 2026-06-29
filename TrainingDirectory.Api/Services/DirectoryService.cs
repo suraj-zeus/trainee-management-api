@@ -5,7 +5,7 @@ namespace TrainingDirectory.Api.Services;
 
 public class DirectoryService : IDirectoryService
 {
-    public async Task<TrianeeProfileRespDto> GetTraineeProfileAsync(int id)
+    public TrianeeProfileRespDto GetTraineeProfileAsync(int id)
     {
         TrianeeProfileRespDto trainee = new ()
         {

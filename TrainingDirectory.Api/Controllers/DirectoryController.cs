@@ -20,11 +20,12 @@ public class DirectoryController : ControllerBase
     }
  
     [HttpGet("trainees/{id}")]
-    public async Task<IActionResult> GetTraineeProfile(int id)
+    public IActionResult GetTraineeProfile(int id)
     {
         string requestId = HttpContext.TraceIdentifier;
 
-        var result=await _service.GetTraineeProfileAsync(id);
+        var result = _service.GetTraineeProfileAsync(id);
+
         if(result==null) {
             _logger.LogWarning("Correlation Id : {requestId}. Trainee profile with Id : {id} was not found",requestId, id);
             return NotFound(new { message = $"Trainee profile with ID {id} not found." });

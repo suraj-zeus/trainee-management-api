@@ -66,85 +66,89 @@ public class RabbitMqService : IRabbitMqService
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
-        // get connection
-        _connection = await GetConnectionAsync(cancellationToken);
+        try
+        {
+            // get connection
+            _connection = await GetConnectionAsync(cancellationToken);
 
-        // create channel
-        _channel = await _connection.CreateChannelAsync(cancellationToken: cancellationToken);
+            // create channel
+            _channel = await _connection.CreateChannelAsync(cancellationToken: cancellationToken);
 
-        // read configs
-        string dlxName = _rabbitMqConfig.DlxName;
-        string dlqName = _rabbitMqConfig.DlqName;
-        string routingKey = _rabbitMqConfig.RoutingKey;
+            // read configs
+            string dlxName = _rabbitMqConfig.DlxName;
+            string dlqName = _rabbitMqConfig.DlqName;
+            string routingKey = _rabbitMqConfig.RoutingKey;
 
-        // declare exchange
-        await _channel.ExchangeDeclareAsync(
-            exchange: dlxName,
-            type: ExchangeType.Direct,
-            durable: true,
-            cancellationToken: cancellationToken
-        );
+            // declare exchange
+            await _channel.ExchangeDeclareAsync(
+                exchange: dlxName,
+                type: ExchangeType.Direct,
+                durable: true,
+                cancellationToken: cancellationToken
+            );
 
-        // declare dead-letter queue
-        await _channel.QueueDeclareAsync(
-            queue: dlqName,
-            durable: true,
-            exclusive: false,
-            autoDelete: false,
-            arguments: null,
-            cancellationToken: cancellationToken
-        );
+            // declare dead-letter queue
+            await _channel.QueueDeclareAsync(
+                queue: dlqName,
+                durable: true,
+                exclusive: false,
+                autoDelete: false,
+                arguments: null,
+                cancellationToken: cancellationToken
+            );
 
 
-        // bind exhange and dead-letter queue
-        await _channel.QueueBindAsync(
-            queue: dlqName,
-            exchange: dlxName,
-            routingKey: routingKey,
-            cancellationToken: cancellationToken
-        );
+            // bind exhange and dead-letter queue
+            await _channel.QueueBindAsync(
+                queue: dlqName,
+                exchange: dlxName,
+                routingKey: routingKey,
+                cancellationToken: cancellationToken
+            );
 
-        // arguments for main queue
-        var mainQueueArguments = new Dictionary<string, object?>
+            // arguments for main queue
+            var mainQueueArguments = new Dictionary<string, object?>
         {
             { "x-dead-letter-exchange", dlxName },
             { "x-dead-letter-routing-key", routingKey }
         };
 
-        // declare main queue
-        await _channel.QueueDeclareAsync(
-            queue: _rabbitMqConfig.SubmissionQueue,
-            durable: true,
-            exclusive: false,
-            autoDelete: false,
-            arguments: mainQueueArguments,
-            cancellationToken: cancellationToken
-        );
+            // declare main queue
+            await _channel.QueueDeclareAsync(
+                queue: _rabbitMqConfig.SubmissionQueue,
+                durable: true,
+                exclusive: false,
+                autoDelete: false,
+                arguments: mainQueueArguments,
+                cancellationToken: cancellationToken
+            );
 
 
-        // Prefetch count = 1 tells RabbitMQ not to give this worker a new message 
-        // until it has fully completed and acknowledged the current one
-        // prefetch size = 0, no limit on amount of bytes in message
-        // global = false, every individual consumer gets its own buffer limit of 1 message.
-        await _channel.BasicQosAsync(
-            prefetchSize: 0,
-            prefetchCount: 1,
-            global: false,
-            cancellationToken: cancellationToken
-        );
+            // Prefetch count = 1 tells RabbitMQ not to give this worker a new message 
+            // until it has fully completed and acknowledged the current one
+            // prefetch size = 0, no limit on amount of bytes in message
+            // global = false, every individual consumer gets its own buffer limit of 1 message.
+            await _channel.BasicQosAsync(
+                prefetchSize: 0,
+                prefetchCount: 1,
+                global: false,
+                cancellationToken: cancellationToken
+            );
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError("Error in creating connection to rabbitmq...");
+            _logger.LogError(ex.Message);
+        }
     }
 
 
     public async Task ConsumeAsync(CancellationToken cancellationToken)
     {
 
-       
-
-
-
         if (_channel == null)
         {
-            throw new BadRequestException("Rabbitmq channel not initialized..");
+            _logger.LogError("Rabbitmq channel not initialized...");
             return;
         }
 
@@ -209,16 +213,24 @@ public class RabbitMqService : IRabbitMqService
 
     public async Task StopAsync(CancellationToken cancellationToken)
     {
-        if (_channel != null)
+        try
         {
-            await _channel.CloseAsync(cancellationToken: cancellationToken);
-            await _channel.DisposeAsync();
-        }
+            if (_channel != null)
+            {
+                await _channel.CloseAsync(cancellationToken: cancellationToken);
+                await _channel.DisposeAsync();
+            }
 
-        if (_connection != null)
+            if (_connection != null)
+            {
+                await _connection.CloseAsync(cancellationToken: cancellationToken);
+                await _connection.DisposeAsync();
+            }
+        }
+        catch (Exception ex)
         {
-            await _connection.CloseAsync(cancellationToken: cancellationToken);
-            await _connection.DisposeAsync();
+            _logger.LogError("Error in closing connection to rabbitmq...");
+            _logger.LogError(ex.Message);
         }
     }
 
