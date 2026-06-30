@@ -7,10 +7,9 @@
 docker/
 dump.sql
 
-Dockerfile.*
 
 
-*/Dockerfile.*
+
 */obj/
 
 */bin/
