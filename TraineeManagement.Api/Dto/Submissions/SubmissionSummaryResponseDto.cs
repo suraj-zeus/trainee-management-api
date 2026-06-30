@@ -1,0 +1,19 @@
+
+
+
+namespace TraineeManagement.Api.Dto;
+
+
+public class SubmissionSummaryResponseDto
+{
+    public int Id { get; set; }
+
+    public int TaskAssignmentId { get; set; }
+
+    public string SubmissionUrl { get; set; } = string.Empty;
+
+    public DateTime SubmissionDate { get; set; }
+
+    public String Status { get; set; } = string.Empty;
+
+}

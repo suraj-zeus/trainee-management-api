@@ -35,6 +35,15 @@ public class ProcessingJobController : ControllerBase
         return Ok(processingJobResponse);
     }
 
+    // POST /api/processing-jobs/{id}/retry
+    [HttpPost("{id}/retry")]
+    public async Task<ActionResult<ProcessingJobResponseDto>> RetryProcessingJob(int id)
+    {
+        ProcessingJobResponseDto processingJobResponse = await _processJobService.RetryProcessingJob(id);
+
+        return Ok(processingJobResponse);
+    }
+    
 
 
 }

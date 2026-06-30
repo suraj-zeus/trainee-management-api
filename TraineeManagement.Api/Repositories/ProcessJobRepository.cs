@@ -25,4 +25,9 @@ public class ProcessingJobRepository : IProcessJobRepository
         return await _appDbContext.ProcessingJobs.FindAsync(id);
     }
 
+    public async Task UpdateProcessingJob()
+    {
+        await _appDbContext.SaveChangesAsync();
+    }
+
 }

@@ -54,4 +54,16 @@ public class SubmissionFilesController : ControllerBase
 
         return Ok(new {Message = $"Submission file record with ID : {id} deleted successfully"});
     }
+
+
+     // /api/submission-files/{id} 
+      [HttpGet("{id}")]
+    public async Task<ActionResult<SubmissionFileMetadataResponseDto>> GetFileMetadataById(int id)
+    {
+        string requestId = HttpContext.TraceIdentifier;
+
+        SubmissionFileMetadataResponseDto metadata = await _submissionFileService.GetFileMetadataById(id, User);
+
+        return Ok(metadata);        
+    }
 }

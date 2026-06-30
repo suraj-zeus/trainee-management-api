@@ -5,12 +5,83 @@
 - dotnet - to create all the apis
 - mysql - to store trainees data 
 - ef core - to connect to mysql database
+- Redis - for caching
+- RabbitMQ - for backround processing
+- Docker & Docker Compose - for containerization
+
+
+## Project Folder/File Structure
+```text
+
+SharedFolder
+│
+├── DbContext/
+├── Migrations/
+├── Models/
+├── RabbitmqMessaging/
+├── SharedFolder.csproj
+
+
+TraineeManagement.Api
+│
+├── Configurations/
+├── Constants/
+├── Controllers/
+├── Dto/
+├── exceptions/
+├── Migrations/
+├── Properties/
+├── Repositories/
+├── Services/
+├── Uploads/
+├── ValidationAttributes/
+├── .env
+├── appsettings.Development.json
+├── appsettings.json
+├── Program.cs
+├── TraineeManagement.Api.csproj
+
+
+SubmissionProcessor.Worker
+│
+├── Configurations/
+├── Dtos/
+├── exceptions/
+├── Properties/
+├── ServiceClients/
+├── Services/
+├── .env
+├── appsettings.Development.json
+├── appsettings.json
+├── Program.cs
+├── SubmissionProcessor.Worker.csproj
+├── Worker.cs
+
+
+TrainingDirectory.Api
+│
+├── Controllers/
+├── Dtos/
+├── Properties/
+├── Services/
+├── appsettings.Development.json
+├── appsettings.json
+├── Program.cs
+├── TrainingDirectory.Api.csproj
+├── TrainingDirectory.Api.http
+
+
+```
+
+
 
 ## requirements
 - Must have dotnet (version 10) installed on the system to run this project
 - Must have mysql (preferably version 8 onwards) installed 
+- Must have docker installed 
 
-## How to Run (Backend Setup)
+
+## How to Run Locally (Backend Setup)
 - Download the project folder
 - Open this project folder in any IDE
 - Update the mysql database connection string and jwt configuration details in .env. If there is no .env file, create it under project root folder and add/update the following values :
@@ -23,6 +94,7 @@
         - AdminUser__Password=
         - AdminUser__Email=
 
+- For more .env variables, check .env.example in each project folder
 - Open terminal, go to root project folder path and run this command 'dotnet restore' to restore all the required packages 
 - Run 'dotnet ef migrations add InitialCreate' and 'dotnet ef database update' command for database migrations
 - Run 'dotnet run' command to run the project
@@ -41,18 +113,73 @@
 - Once ran successfully, the code and the database are in sync. We can test the connection by using swagger UI, try adding one entry using POST end point and see if it is shown in the datase or not
 
 
+
+## Redis
+- Cache-aside pattern
+- Default TTL: 60 Minutes
+- Automatic database fallback
+- Check docker-compose.yml to see redis configuration/setup
+ 
+## RabbitMQ
+- Durable Queue
+- Persistent Messages
+- Manual Acknowledgements
+- Prefetch Count = 1
+- Check docker-compose.yml to see rabbitmq configuration/setup
+
+## Docker Compose Startup
+ 
+- Start all services: 'docker compose up -d'
+- Stop all services: 'docker compose down'
+- Build and start all services: 'docker compose up --build -d'
+
+
 ## EF Core migration commands
  
 - dotnet ef migrations add "MigrationName"
 - dotnet ef database update
 
-## Login Credentials for testing
+## Login Credentials for (admin) testing
  
 - username = "admin"
 - password = "admin@123"
 
-### JWT Usage Instructions
+## JWT Usage Instructions
 - In the .env file, change the Key, Issuer and Audience values to change the JWT settings.
+
+
+## Retry Strategy
+- HTTP Client Resilience
+- Timeout Handling
+- Retry for Transient Failures
+
+##  Idempotency
+- MessageId
+- CorrelationId
+These identifiers help prevent duplicate processing.
+
+## Failure Behaviour
+ 
+MySQL Unavailable
+ 
+- Readiness check reports Unhealthy.
+- API returns database-related errors.
+ 
+Redis Unavailable
+ 
+- Application falls back to MySQL.
+- Cache failures are logged.
+ 
+RabbitMQ Unavailable
+ 
+- Publish operation logs failure. And uploaded file is deleted
+- Worker remains unavailable until RabbitMQ recovers.
+ 
+Worker Failure
+ 
+- Message is negatively acknowledged (NACK).
+- Processing is retried according to RabbitMQ configuration (max 3 attempts allowed).
+
  
 
 ## Notes 
@@ -60,7 +187,12 @@
 
 ## Features Completed
 Working API endpoints:
+
+### Initial Health check api
+
 - GET /api/health
+
+### Trainee apis
 
 - GET /api/trainees
 - GET /api/trainees/{id}
@@ -68,13 +200,19 @@ Working API endpoints:
 - PUT /api/trainees/{id}
 - DELETE /api/trainees/{id}
 
+### Auth apis
+
 - POST /api/auth/login
+
+### Mentor apis
 
 - GET /api/mentors
 - GET /api/mentors/{id} 
 - POST /api/mentors
 - PUT /api/mentors/{id}
 - DELETE /api/mentors/{id}
+
+### Learning tasks apis
 
 - GET /api/learning-tasks
 - GET /api/learning-tasks/{id} 
@@ -82,128 +220,44 @@ Working API endpoints:
 - PUT /api/learning-tasks/{id}
 - DELETE /api/learning-tasks/{id}
 
+### Task assignment apis
+
 - POST   /api/task-assignments
 - GET    /api/task-assignments
 - GET    /api/task-assignments/{id}
 - PUT    /api/task-assignments/{id}/status
  
+### Submission apis
+
 - POST   /api/submissions
 - GET    /api/submissions
 - GET    /api/submissions/{id}
+- POST   /api/submissions/{submissionId}/files 
+- Get    /api/submissions/{id}/summary
  
+### Review apis
+
 - POST   /api/reviews
 - GET    /api/reviews
 - GET    /api/reviews/{id}
 
 
+### Submission-files apis
 
-## api endpoints and expected response for each api
-
-- POST /api/auth/login
-    - Valid login credentials 200 OK
-    - Invalid credentials 400 Bad Request
-
-- PUT /api/trainees/{id}
-    - Valid trainee ID 200 OK
-    - Invalid trainee ID 404 Not Found
-    - Invalid request 400 Bad Request
-
-- DELETE /api/trainees/{id}
-    - Valid trainee ID 204 No Content
-    - Invalid trainee ID 404 Not Found
-
-- POST /api/trainees
-    - Valid data 201 Created
-    - Invalid data 400 Bad Request  
-
-- GET /api/health
-    - 200 OK
-
-- GET /api/trainees
-    - 200 OK
-
-- GET /api/trainees/{id}
-    - Valid ID 200 OK
-    - Invalid ID 404 Not Found
-
-- GET /api/mentors
-    - 200 OK
-
-- GET /api/mentors/{id} 
-    - Valid ID 200 OK
-    - Invalid ID 404 Not Found
-
-- POST /api/mentors
-    - Valid data 201 Created
-    - Invalid data 400 Bad Request
-
-- PUT /api/mentors/{id}
-    - Valid ID 200 OK
-    - Invalid ID 404 Not Found
-    - Invalid request 400 Bad Request
-
-- DELETE /api/mentors/{id}
-    - Valid ID 204 No Content
-    - Invalid ID 404 Not Found
-
-- GET /api/learning-tasks
-    - 200 OK
-
-- GET /api/learning-tasks/{id}
-    - Valid ID 200 OK
-    - Invalid ID 404 Not Found
-
-- POST /api/learning-tasks
-    - Valid data 201 Created
-    - Invalid data 400 Bad Request
-
-- PUT /api/learning-tasks/{id}
-    - Valid ID 200 OK
-    - Invalid ID 404 Not Found
-    - Invalid request 400 Bad Request
-
-- DELETE /api/learning-tasks/{id}
-    - Valid ID 204 No Content
-    - Invalid ID 404 Not Found
+- GET       /api/submission-files/{id} 
+- GET       /api/submission-files/{id}/download
+- DELETE    /api/submission-files/{id} 
 
 
-- POST  /api/task-assignments
-    - Valid data 201 Created
-    - Invalid data 400 Bad Request
+### Processing job apis
 
-- GET    /api/task-assignments
-    - 200 OK
+- GET       /api/processing-jobs/{id} 
 
-- GET    /api/task-assignments/{id}
-    - Valid ID 200 OK
-    - Invalid ID 404 Not Found
 
-- PUT    /api/task-assignments/{id}/status
-    - Valid ID 200 OK
-    - Invalid ID 404 Not Found
-    - Invalid request 400 Bad Request
- 
-- POST   /api/submissions
-    - Valid data 201 Created
-    - Invalid data 400 Bad Request
+### Health-Check apis
 
-- GET    /api/submissions
-    - 200 OK
-
-- GET    /api/submissions/{id}
-    - Valid ID 200 OK
-    - Invalid ID 404 Not Found
- 
-- POST   /api/reviews
-    - Valid data 201 Created
-    - Invalid data 400 Bad Request
-
-- GET    /api/reviews
-    - 200 OK
-
-- GET    /api/reviews/{id}
-    - Valid ID 200 OK
-    - Invalid ID 404 Not Found
+- GET      /health/live
+- GET      /health/ready 
 
 
 
@@ -329,6 +383,12 @@ Sample POST   /api/reviews request :
         "status": "Accepted",
         "reviewedDate": "2026-06-16"
     }
+
+
+Sample POST /api/submissions/{submissionId}/files 
+
+    Download File option
+
 
 
 
@@ -737,6 +797,69 @@ Sample POST /api/reviews response:
  
 
 
+Sample POST /api/submissions/{submissionId}/files response:
+
+    Download File option
+
+
+Sample GET /api/submission-files/{id}   response:
+
+    {
+        "id": 0,
+        "submissionId": 0,
+        "originalFileName": "string",
+        "storageName": "string",
+        "contentType": "string",
+        "fileSizeBytes": 0,
+        "checkSum": "string",
+        "uploadedByUserId": 0,
+        "createdDate": "2026-06-30T08:18:49.298Z",
+        "updatedDate": "2026-06-30T08:18:49.298Z"
+    }
+
+
+Sample GET /api/processing-jobs/{id} response:
+    
+    {
+        "id": 1,
+        "messageId": "8659470d-f35c-4e54-b36c-f1c246ce084f",
+        "correlationId": "0HNMJA8LE9MQO:0000002D",
+        "submissionId": 1,
+        "fileId": 1,
+        "status": "Queued",
+        "attempts": 0,
+        "errorSummary": "",
+        "startedDate": "2026-06-26T07:36:38.014742",
+        "completedDate": "0001-01-01T00:00:00"
+    }
+
+
+Sample GET /api/submissions/{id}/summary response:
+
+    {
+        "id": 1,
+        "taskAssignmentId": 1,
+        "submissionUrl": "drive",
+        "submissionDate": "2026-06-26T00:00:00",
+        "status": "Submitted"
+    }
+
+
+Sample POST /api/processing-jobs/{id}/retry response:
+
+    {
+        "id": 2,
+        "messageId": "7d17c337-9d94-4975-be21-4c206606635a",
+        "correlationId": "0HNMMLGRQ0GRB:00000005",
+        "submissionId": 1,
+        "fileId": 2,
+        "status": "Queued",
+        "attempts": 3,
+        "errorSummary": "",
+        "startedDate": "2026-06-26T07:36:47.126876",
+        "completedDate": "2026-06-30T13:23:09.078583"
+    }
+
 
 ## Architecture diagram
 
@@ -757,12 +880,13 @@ Sample POST /api/reviews response:
 - While installing dotnet packages and setting up initial web project in dotnet
 - While installing and setting up swagger in the current project for testing apis
 - While establishing connection to mysql database and running database migration command
+- While writing Dockerfile/docker-compose files
 
 
 ## Limitations
 - Absence of role based authorisation 
+- No cloud storage integration
 - No email verification
-- No file upload support for submissions
     
 ## Security Checklist
  

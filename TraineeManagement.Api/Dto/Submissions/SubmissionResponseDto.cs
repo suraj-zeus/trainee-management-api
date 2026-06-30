@@ -16,5 +16,4 @@ public class SubmissionResponseDto
 
     public String Status { get; set; } = string.Empty;
 
-    // public ICollection<ReviewModel> Reviews { get; set; } = new List<ReviewModel>();
 }

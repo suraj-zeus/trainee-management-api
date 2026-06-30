@@ -23,4 +23,9 @@ public static class RedisCacheKeys
     {
         return $"submission:{id}";
     }
+
+    public static string SubmissionSummary(int id)
+    {
+        return $"submission-summary:{id}";
+    }
 }

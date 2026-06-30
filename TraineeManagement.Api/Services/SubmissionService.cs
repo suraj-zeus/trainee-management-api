@@ -68,6 +68,31 @@ public class SubmissionService : ISubmissionService
         return submissionResp;
     }
 
+
+
+    public async Task<SubmissionSummaryResponseDto> GetSubmissionSummaryById(int id)
+    {
+        // first search in cache 
+        string redisKey = RedisCacheKeys.SubmissionSummary(id);
+        SubmissionSummaryResponseDto submissionSummaryResp = await _redisService.GetAsync<SubmissionSummaryResponseDto>(redisKey);
+
+        if(submissionSummaryResp != null) 
+            return submissionSummaryResp;
+
+        // if not found in cache, get it from db
+        SubmissionModel submission = await _submissionRepository.GetById(id);
+
+        if(submission == null)
+            return null;
+
+        submissionSummaryResp = MapSubmissionToSubmissionSummaryResponseDto(submission);
+
+        // add in cache
+        await _redisService.SetAsync<SubmissionSummaryResponseDto>(redisKey, submissionSummaryResp);
+        return submissionSummaryResp;
+    }
+
+
     public async Task<SubmissionResponseDto> AddSubmission(CreateSubmissionDto createSubmissionDto)
     {
         TaskAssignmentModel taskAssignment = await _taskAssignmentRepository.GetById(createSubmissionDto.TaskAssignmentId);
@@ -107,5 +132,19 @@ public class SubmissionService : ISubmissionService
         return submissionResponseDto;
     }
 
+    private SubmissionSummaryResponseDto MapSubmissionToSubmissionSummaryResponseDto(SubmissionModel submission)
+    {
+
+        SubmissionSummaryResponseDto submissionSummaryResponse = new ()
+        {
+            Id = submission.Id,
+            TaskAssignmentId = submission.TaskAssignmentId,
+            SubmissionUrl = submission.SubmissionUrl,
+            SubmissionDate = submission.SubmissionDate,
+            Status = submission.Status,
+        };
+
+        return submissionSummaryResponse;
+    }
 
 }

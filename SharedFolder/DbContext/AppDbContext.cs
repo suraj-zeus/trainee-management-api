@@ -136,4 +136,5 @@ public class AppDbContext : DbContext
             .OnDelete(DeleteBehavior.Cascade); // Deletes job tracker if file is purged
 
     }
+
 }

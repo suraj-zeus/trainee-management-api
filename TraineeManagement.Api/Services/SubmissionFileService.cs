@@ -46,18 +46,19 @@ public class SubmissionFileService : ISubmissionFileService
 
     public async Task<UploadSubmissionFileResponseDto> Upload(CreateSubmissionFileDto createSubmissionFileDto, int submissionId, ClaimsPrincipal claimsPrincipalUser)
     {
+        string requestId = _httpContextAccessor.HttpContext.TraceIdentifier;
         IFormFile formFile = createSubmissionFileDto.formFile;
 
         SubmissionModel submission = await _submissionRepository.GetById(submissionId);
 
         if (submission == null)
-            throw new KeyNotFoundException($"Submission record with ID : {submissionId} was not found");
+            throw new KeyNotFoundException($"RequestId : [{requestId}]. Submission record with ID : {submissionId} was not found");
 
         bool isValid = _fileStorageService.validate(formFile);
 
         if (!isValid)
         {
-            throw new BadRequestException("Invalid file request");
+            throw new BadRequestException($"RequestId : [{requestId}]. Invalid file request");
         }
 
         int userId = int.Parse(claimsPrincipalUser.FindFirstValue(ClaimTypes.NameIdentifier)!);
@@ -75,7 +76,7 @@ public class SubmissionFileService : ISubmissionFileService
         // restrict duplicate file upload for same user
         if(existingFile != null && existingFile.UploadedByUserId == userId)
         {
-            throw new InvalidOperationException($"Invalid operation! This file : {originalFileName} already exists");
+            throw new InvalidOperationException($"RequestId : [{requestId}]. Invalid operation! This file : {originalFileName} already exists");
         }
 
 
@@ -85,7 +86,7 @@ public class SubmissionFileService : ISubmissionFileService
         // if file upload failed failed
         if (string.IsNullOrEmpty(path))
         {
-            throw new Exception("The file storage service failed to save the uploaded file.");
+            throw new Exception($"RequestId : [{requestId}]. The file storage service failed to save the uploaded file.");
         }
 
 
@@ -144,7 +145,7 @@ public class SubmissionFileService : ISubmissionFileService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Upload pipeline failed after storing file {StorageName}. Initiating cleanup.", storageName);
+            _logger.LogError(ex, "RequestId : [{requestId}]. Upload pipeline failed after storing file {StorageName}. Initiating cleanup.", requestId, storageName);
 
             try
             {
@@ -154,7 +155,7 @@ public class SubmissionFileService : ISubmissionFileService
             catch (Exception deleteEx)
             {
                 // Log if the deletion itself fails so you don't lose track of zombie files
-                _logger.LogCritical(deleteEx, "Failed to clean up orphaned file {StorageName} after upload pipeline failure.", storageName);
+                _logger.LogCritical(deleteEx, "RequestId : [{requestId}]. Failed to clean up orphaned file {StorageName} after upload pipeline failure.", requestId, storageName);
             }
 
             
@@ -166,24 +167,25 @@ public class SubmissionFileService : ISubmissionFileService
 
     public async Task<(Stream, string, string)> DownloadFile(int id, ClaimsPrincipal claimsPrincipalUser)
     {
+        string requestId = _httpContextAccessor.HttpContext.TraceIdentifier;
         int userId = int.Parse(claimsPrincipalUser.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
         SubmissionFileModel submissionFile = await _submissionFileRepository.FindById(id);
 
         if (submissionFile == null)
         {
-            throw new KeyNotFoundException($"Submission File record with id : {id} was not found");
+            throw new KeyNotFoundException($"RequestId : [{requestId}]. Submission File record with id : {id} was not found");
         }
 
         // authorisation check
         if (submissionFile.UploadedByUserId != userId)
         {
-            throw new ForbiddenException($"You do not have permission to read/modify this file.");
+            throw new ForbiddenException($"RequestId : [{requestId}]. You do not have permission to read/modify this file.");
         }
 
         if (!await _fileStorageService.ExistsAsync(submissionFile.StorageName))
         {
-            throw new KeyNotFoundException($"Physical file is mission for the given file id : {id}");
+            throw new KeyNotFoundException($"RequestId : [{requestId}]. Physical file is mission for the given file id : {id}");
         }
 
         Stream stream = await _fileStorageService.OpenReadAsync(submissionFile.StorageName);
@@ -195,34 +197,72 @@ public class SubmissionFileService : ISubmissionFileService
 
     public async Task<bool> DeleteFile(int id, ClaimsPrincipal claimsPrincipalUser)
     {
+         string requestId = _httpContextAccessor.HttpContext.TraceIdentifier;
         int userId = int.Parse(claimsPrincipalUser.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
         SubmissionFileModel submissionFile = await _submissionFileRepository.FindById(id);
 
         if (submissionFile == null)
         {
-            throw new KeyNotFoundException($"Submission File record with id : {id} was not found");
+            throw new KeyNotFoundException($"RequestId : [{requestId}]. Submission File record with id : {id} was not found");
         }
 
         // authorisation check
         if (submissionFile.UploadedByUserId != userId)
         {
-            throw new ForbiddenException($"You do not have permission to read/modify this file.");
+            throw new ForbiddenException($"RequestId : [{requestId}]. You do not have permission to read/modify this file.");
         }
 
-        if (!await _fileStorageService.ExistsAsync(submissionFile.StorageName))
+    
+        // delete from db
+        await _submissionFileRepository.Delete(submissionFile);
+
+         if (!await _fileStorageService.ExistsAsync(submissionFile.StorageName))
         {
-            throw new KeyNotFoundException($"Physical file is missing for the given file id : {id}");
+            throw new KeyNotFoundException($"RequestId : [{requestId}]. Physical file is missing for the given file id : {id}");
         }
 
         await _fileStorageService.DeleteAsync(submissionFile.StorageName);
 
-        // delete from db
-        await _submissionFileRepository.Delete(submissionFile);
-
         return true;
     }
 
+
+
+    public async Task<SubmissionFileMetadataResponseDto> GetFileMetadataById(int id, ClaimsPrincipal claimsPrincipalUser)
+    {
+        string requestId = _httpContextAccessor.HttpContext.TraceIdentifier;
+        int userId = int.Parse(claimsPrincipalUser.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        SubmissionFileModel submissionFile = await _submissionFileRepository.FindById(id);
+
+        if (submissionFile == null)
+        {
+            throw new KeyNotFoundException($"RequestId : [{requestId}]. Submission File record with id : {id} was not found");
+        }
+
+        return MapSubmissionFileToSubmissionFileMetadataDto(submissionFile, userId);
+    }
+
+
+    private SubmissionFileMetadataResponseDto  MapSubmissionFileToSubmissionFileMetadataDto(SubmissionFileModel submissionFile, int userId)
+    {
+        SubmissionFileMetadataResponseDto metadataResp = new()
+        {
+            Id = submissionFile.Id,
+            SubmissionId = submissionFile.SubmissionId,
+            OriginalFileName = submissionFile.OriginalFileName,
+            StorageName = submissionFile.StorageName,
+            ContentType = submissionFile.ContentType,
+            FileSizeBytes = submissionFile.FileSizeBytes,
+            CheckSum = submissionFile.CheckSum,
+            UploadedByUserId = userId,
+            CreatedDate = submissionFile.CreatedDate,
+            UpdatedDate = submissionFile.UpdatedDate
+        };
+
+        return metadataResp;
+    }
+   
 
 
 

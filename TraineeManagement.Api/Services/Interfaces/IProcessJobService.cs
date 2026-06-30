@@ -17,5 +17,6 @@ public interface IProcessJobService
 
     public Task<ProcessingJobResponseDto> GetProcessJobById(int id);
 
+    public Task<ProcessingJobResponseDto> RetryProcessingJob(int id);
 
 }

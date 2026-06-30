@@ -63,6 +63,8 @@ public class SubmissionsController : ControllerBase
         return Ok(submission);
     }
 
+
+
     // POST /api/submissions/{submissionId}/files 
     [HttpPost("{submissionId}/files")]
     public async Task<ActionResult<UploadSubmissionFileResponseDto>> Upload(int submissionId, CreateSubmissionFileDto createSubmissionFileDto)
@@ -71,6 +73,22 @@ public class SubmissionsController : ControllerBase
         return Accepted(submissionFileResp);
     }
 
+
+    // /api/submissions/{id}/summary
+    [HttpGet("{id}/summary")]
+    public async Task<ActionResult> GetSubmissionSummary(int id)
+    {
+        string requestId = HttpContext.TraceIdentifier;
+        SubmissionSummaryResponseDto submissionSummary = await _submissionService.GetSubmissionSummaryById(id);
+
+        if (submissionSummary == null)
+        {
+            _logger.LogInformation($"RequestId : [{requestId}]. The requested submission summary record with ID : {id} was not found");
+            return NotFound(new { message = $"Submission summary record with id : {id} not found" });
+        }
+
+        return Ok(submissionSummary);
+    }
 
    
 }

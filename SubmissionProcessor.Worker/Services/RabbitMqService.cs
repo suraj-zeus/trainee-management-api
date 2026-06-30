@@ -243,7 +243,7 @@ public class RabbitMqService : IRabbitMqService
         using (var scope = _scopeFactory.CreateScope())
         {
             _context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-            ProcessingJobModel processingJob = await _context.ProcessingJobs.FirstOrDefaultAsync(p => p.MessageId == request.MessageId);
+            ProcessingJobModel processingJob = await _context.ProcessingJobs.FirstOrDefaultAsync(p => p.FileId == request.FileId);
             SubmissionFileModel fileMetaData = await _context.SubmissionFiles.FindAsync(request.FileId);
 
 
@@ -254,9 +254,12 @@ public class RabbitMqService : IRabbitMqService
 
                 if (processingJob != null)
                 {
+                    _logger.LogInformation($"Processing with Job Id : {processingJob.Id} has failed");
                     processingJob.Status = ProcessingJobStatus.Failed.ToString();
                     await _context.SaveChangesAsync();
                 }
+
+                _logger.LogInformation("-------------------");
 
                 // send negative acknowledgement
                 await _channel.BasicNackAsync(

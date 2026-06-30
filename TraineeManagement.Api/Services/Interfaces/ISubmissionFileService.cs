@@ -9,11 +9,11 @@ namespace TraineeManagement.Api.Services;
 
 public interface ISubmissionFileService
 {
-      
+
     public Task<UploadSubmissionFileResponseDto> Upload(CreateSubmissionFileDto createSubmissionFileDto, int submissionId, ClaimsPrincipal claimsPrincipalUser);
 
-     public Task<bool> DeleteFile(int id, ClaimsPrincipal claimsPrincipalUser);
+    public Task<bool> DeleteFile(int id, ClaimsPrincipal claimsPrincipalUser);
 
-
+    public Task<SubmissionFileMetadataResponseDto> GetFileMetadataById(int id, ClaimsPrincipal claimsPrincipalUser);
     public Task<(Stream, string, string)> DownloadFile(int id, ClaimsPrincipal claimsPrincipalUser);
 }

@@ -19,7 +19,8 @@ public class GlobalExceptionHandler : IExceptionHandler
         Exception exception, 
         CancellationToken cancellationToken)
     {
-        _logger.LogError(exception, "Error occurred: {Message}", exception.Message);
+        string requestId = httpContext.TraceIdentifier;
+        _logger.LogError(exception, $"RequestId : [{requestId}]. Error occurred: {exception.Message}");
 
 
         // Handle multiple exceptions in one place

@@ -11,4 +11,6 @@ public interface IProcessJobRepository
     public Task Add(ProcessingJobModel processingJob);
 
     public Task<ProcessingJobModel> GetById(int id);
+
+     public Task UpdateProcessingJob();
 }
