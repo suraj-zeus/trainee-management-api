@@ -741,18 +741,17 @@ Sample POST /api/reviews response:
 ## Architecture diagram
 
 # Redis Cache 
-
-![alt text](readme-assets/redis.png)
+<img width="1280" height="448" alt="redis" src="https://github.com/user-attachments/assets/956db310-7612-4095-97fa-e3b75bebb580" />
 
 
 # Rabbitmq 
 
-![alt text](readme-assets/rabbitmq.png)
+<img width="1830" height="454" alt="rabbitmq" src="https://github.com/user-attachments/assets/4fc72d1f-8cc9-41dc-81fe-278fd3a912d3" />
 
 
 # Workflow Diagram
 
-![alt text](readme-assets/workflow.png)
+<img width="1812" height="796" alt="workflow" src="https://github.com/user-attachments/assets/6c36be80-8045-409c-83ee-f731c0b97537" />
 
 ## Challanges faced
 - While installing dotnet packages and setting up initial web project in dotnet
