@@ -82,6 +82,8 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
     restart: on-failure
+    volumes:
+      - "./TraineeManagement.Api/Uploads:/App/Uploads"
  
   submission-worker-service:
     build:
