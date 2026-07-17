@@ -6,7 +6,6 @@
 .env
 docker/
 dump.sql
-docker-compose.yml
 
 
 
@@ -23,7 +22,6 @@ docker-compose.yml
 
 */docker
 
-*/docker-compose.yml
 
 
 
